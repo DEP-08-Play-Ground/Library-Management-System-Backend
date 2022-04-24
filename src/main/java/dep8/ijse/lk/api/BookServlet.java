@@ -1,7 +1,6 @@
 package dep8.ijse.lk.api;
 
 import dep8.ijse.lk.dto.BookDTO;
-import dep8.ijse.lk.dto.MemberDTO;
 import dep8.ijse.lk.exception.ValidationException;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
@@ -11,10 +10,12 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import javax.sql.DataSource;
-import java.awt.print.Book;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 
 @WebServlet(name = "BookServlet", urlPatterns = {"/books","/books/"})
 public class BookServlet extends HttpServlet {
@@ -24,7 +25,25 @@ public class BookServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        try (Connection connection = pool.getConnection()) {
+            PreparedStatement stm = connection.prepareStatement("SELECT * FROM books");
+            ResultSet rst = stm.executeQuery();
+            Jsonb jsonb = JsonbBuilder.create();
+            int x = 0;
+            ArrayList<BookDTO> bookDTOS = new ArrayList<>();
+            while (rst.next()) {
+                bookDTOS.add(x, new BookDTO(rst.getString("id"), rst.getString("name")
+                        , rst.getString("author"), rst.getString("type")));
+                x++;
+            }
+            response.setContentType("application/json");
+            jsonb.toJson(bookDTOS, response.getWriter());
+            bookDTOS.clear();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("Failed to fetch data");
+        }
     }
 
     @Override
