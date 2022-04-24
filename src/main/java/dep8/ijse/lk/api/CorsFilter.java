@@ -19,7 +19,6 @@ public class CorsFilter extends HttpFilter {
                 res.setHeader("Access-Control-Allow-Headers","Content-Type");
                 res.setHeader("Access-Control-Expose-Headers","Content-Type");
             }
-
         }
         chain.doFilter(req,res);
     }

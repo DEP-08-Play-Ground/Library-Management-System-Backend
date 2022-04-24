@@ -52,6 +52,7 @@ public class MemberServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Failed to fetch data");
         }
+
     }
 
     @Override
@@ -104,13 +105,29 @@ public class MemberServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Jsonb jsonb = JsonbBuilder.create();
+        MemberDTO dto = jsonb.fromJson(req.getReader(), MemberDTO.class);
         try (Connection connection = pool.getConnection()) {
-            jsonb.fromJson(req.getReader(), MemberDTO.class);
-//            connection.prepareStatement("UPDATE members SET first_name=? last_name=?"");
+            PreparedStatement stm = connection.prepareStatement("UPDATE members SET first_name=?, last_name=?, address=?, DOB=?, nic=? WHERE id=?");
+            stm.setString(1,dto.getFirst_name());
+            stm.setString(2,dto.getLast_name());
+            stm.setString(3,dto.getAddress());
+            stm.setString(4,dto.getDOB());
+            stm.setString(5,dto.getNic());
+            stm.setString(6,dto.getId());
+            if (stm.executeUpdate()!=1){
+                throw new RuntimeException("Failed to Update the Member!");
+            }
+            resp.setStatus(HttpServletResponse.SC_GONE);
+            resp.getWriter().write("Successfully Updated!");
         } catch (JsonbException e) {
             e.printStackTrace();
         } catch (IOException | SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            throw new RuntimeException("Failed to update the Member!");
+        }catch (Throwable e){
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
+            resp.getWriter().write(e.getMessage());
         }
     }
 
