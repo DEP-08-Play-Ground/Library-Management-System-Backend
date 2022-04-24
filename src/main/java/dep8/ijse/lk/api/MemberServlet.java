@@ -3,8 +3,8 @@ package dep8.ijse.lk.api;
 import dep8.ijse.lk.dto.MemberDTO;
 import dep8.ijse.lk.exception.ValidationException;
 import jakarta.json.Json;
-import jakarta.json.JsonArrayBuilder;
-import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
@@ -20,9 +20,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 
 @WebServlet(name = "MemberServlet", urlPatterns = {"/mems", "/mems/"})
 public class MemberServlet extends HttpServlet {
@@ -133,8 +130,19 @@ public class MemberServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Jsonb jsonb = JsonbBuilder.create();
-        String header = resp.getHeader("Content-Type");
-
+        JsonReader reader = Json.createReader(req.getReader());
+        JsonObject jsonObject = reader.readObject();
+        String id = jsonObject.getString("id");
+        try(Connection connection = pool.getConnection()){
+            PreparedStatement stm = connection.prepareStatement("DELETE FROM members WHERE id=?");
+            stm.setString(1,id);
+            if (stm.executeUpdate()!=1){
+                throw new RuntimeException("Failed to Delete the Member!");
+            }
+            resp.setStatus(201);
+        }catch (Throwable e){
+            e.printStackTrace();
+            resp.getWriter().write("Failed to Delete the Member!");
+        }
     }
 }
