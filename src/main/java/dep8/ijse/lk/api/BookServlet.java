@@ -3,6 +3,9 @@ package dep8.ijse.lk.api;
 import dep8.ijse.lk.dto.BookDTO;
 import dep8.ijse.lk.dto.MemberDTO;
 import dep8.ijse.lk.exception.ValidationException;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
@@ -116,6 +119,24 @@ public class BookServlet extends HttpServlet {
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
             resp.getWriter().write(e.getMessage());
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        JsonReader reader = Json.createReader(req.getReader());
+        JsonObject jsonObject = reader.readObject();
+        String id = jsonObject.getString("id");
+        try(Connection connection = pool.getConnection()){
+            PreparedStatement stm = connection.prepareStatement("DELETE FROM books WHERE id=?");
+            stm.setString(1,id);
+            if (stm.executeUpdate()!=1){
+                throw new RuntimeException("Failed to Delete the Book!");
+            }
+            resp.setStatus(201);
+        }catch (Throwable e){
+            e.printStackTrace();
+            resp.getWriter().write("Failed to Delete the Book!");
         }
     }
 }
