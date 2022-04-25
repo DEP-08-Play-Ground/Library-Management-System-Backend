@@ -14,7 +14,10 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @WebServlet(name = "BooksIssueServlet", urlPatterns = {"/issue","/issue/"})
 public class BooksIssueServlet extends HttpServlet {
@@ -23,6 +26,25 @@ public class BooksIssueServlet extends HttpServlet {
     public volatile DataSource pool;
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try (Connection connection = pool.getConnection()) {
+            PreparedStatement stm = connection.prepareStatement("SELECT * FROM Issues");
+            ResultSet rst = stm.executeQuery();
+            Jsonb jsonb = JsonbBuilder.create();
+            int x = 0;
+            ArrayList<IssueBookDTO> issues = new ArrayList<>();
+            while (rst.next()) {
+                issues.add(x, new IssueBookDTO(rst.getString("issueId"), rst.getString("bookId")
+                        , rst.getString("memberId"), rst.getString("datetime")));
+                x++;
+            }
+            response.setContentType("application/json");
+            jsonb.toJson(issues, response.getWriter());
+            issues.clear();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("Failed to fetch data");
+        }
 
     }
 

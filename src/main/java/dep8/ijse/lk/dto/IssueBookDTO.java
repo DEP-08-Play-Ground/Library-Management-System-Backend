@@ -4,7 +4,15 @@ public class IssueBookDTO {
     private String issueId;
     private String bookId;
     private String memberId;
+    private String datetime;
 
+
+    public IssueBookDTO(String issueId, String bookId, String memberId, String datetime) {
+        this.issueId = issueId;
+        this.bookId = bookId;
+        this.memberId = memberId;
+        this.datetime = datetime;
+    }
 
     public IssueBookDTO(String issueId, String bookId, String memberId) {
         this.issueId = issueId;
@@ -45,6 +53,14 @@ public class IssueBookDTO {
                 "issueId='" + issueId + '\'' +
                 ", bookId='" + bookId + '\'' +
                 ", memberId='" + memberId + '\'' +
+                ", datetime='" + datetime + '\'' +
                 '}';
+    }
+    public String getDatetime() {
+        return datetime;
+    }
+
+    public void setDatetime(String datetime) {
+        this.datetime = datetime;
     }
 }
