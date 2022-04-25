@@ -1,9 +1,11 @@
 package dep8.ijse.lk.api;
 
 import dep8.ijse.lk.dto.BookDTO;
+import dep8.ijse.lk.dto.MemberDTO;
 import dep8.ijse.lk.exception.ValidationException;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
+import jakarta.json.bind.JsonbException;
 
 import javax.annotation.Resource;
 import javax.servlet.*;
@@ -87,6 +89,33 @@ public class BookServlet extends HttpServlet {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
             response.getWriter().write("Failed to save the book!");
+        }
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Jsonb jsonb = JsonbBuilder.create();
+        BookDTO dto = jsonb.fromJson(req.getReader(), BookDTO.class);
+        try (Connection connection = pool.getConnection()) {
+            PreparedStatement stm = connection.prepareStatement("UPDATE books SET name=?, author=?, type=? WHERE id=?");
+            stm.setString(1,dto.getName());
+            stm.setString(2,dto.getAuthor());
+            stm.setString(3,dto.getType());
+            stm.setString(4,dto.getId());
+            if (stm.executeUpdate()!=1){
+                throw new RuntimeException("Failed to Update the Book!");
+            }
+            resp.setStatus(HttpServletResponse.SC_GONE);
+            resp.getWriter().write("Successfully Updated!");
+        } catch (JsonbException e) {
+            e.printStackTrace();
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to update the Book!");
+        }catch (Throwable e){
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
+            resp.getWriter().write(e.getMessage());
         }
     }
 }
