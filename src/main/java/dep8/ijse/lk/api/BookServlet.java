@@ -36,8 +36,8 @@ public class BookServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
 
         if (method.equals("POST") &&
-                !((req.getServletPath().equalsIgnoreCase("/books") ||
-                        req.getServletPath().equalsIgnoreCase("/books/")))) {
+                !((req.getRequestURI().equalsIgnoreCase("/books") ||
+                        req.getRequestURI().equalsIgnoreCase("/books/")))) {
             res.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         } else if (method.equals("PUT") && !(pathInfo != null &&
@@ -49,7 +49,7 @@ public class BookServlet extends HttpServlet {
         try {
             Jsonb jsonb = JsonbBuilder.create();
             BookDTO book = jsonb.fromJson(req.getReader(), BookDTO.class);
-            if (method.equals("POST") &&!book.getId().matches("B[0-9]{3}")) {
+            if (method.equals("POST") && !book.getId().matches("B[0-9]{3}")) {
                 throw new ValidationException("Invalid ID");
             } else if (book.getName()==null) {
                 throw new ValidationException("Should add the book name");

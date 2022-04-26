@@ -1,0 +1,9 @@
+        System.out.println(req.getPart("id").getContentType());
+        System.out.println(req.getParameter("id"));
+        System.out.println(req.getPart("name").getContentType());
+        System.out.println(req.getParameter("name"));
+        System.out.println(req.getPart("author").getContentType());
+        System.out.println(req.getParameter("author"));
+        System.out.println(req.getPart("booktype").getContentType());
+        System.out.println(req.getParameter("booktype"));
+        System.out.println(req.getPart("preview").getContentType());
