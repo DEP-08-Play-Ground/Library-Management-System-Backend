@@ -1,8 +1,9 @@
 package dep8.ijse.lk.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class MemberDTO {
+public class MemberDTO implements Serializable {
     private String id;
     private String first_name;
     private String last_name;

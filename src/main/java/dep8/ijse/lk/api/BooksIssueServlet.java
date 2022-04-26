@@ -30,12 +30,10 @@ public class BooksIssueServlet extends HttpServlet {
             PreparedStatement stm = connection.prepareStatement("SELECT * FROM Issues");
             ResultSet rst = stm.executeQuery();
             Jsonb jsonb = JsonbBuilder.create();
-            int x = 0;
             ArrayList<IssueBookDTO> issues = new ArrayList<>();
             while (rst.next()) {
-                issues.add(x, new IssueBookDTO(rst.getString("issueId"), rst.getString("bookId")
+                issues.add(new IssueBookDTO(rst.getString("issueId"), rst.getString("bookId")
                         , rst.getString("memberId"), rst.getString("datetime")));
-                x++;
             }
             response.setContentType("application/json");
             jsonb.toJson(issues, response.getWriter());

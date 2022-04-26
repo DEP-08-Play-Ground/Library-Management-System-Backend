@@ -1,6 +1,8 @@
 package dep8.ijse.lk.dto;
 
-public class BookDTO {
+import java.io.Serializable;
+
+public class BookDTO implements Serializable {
     private String id;
     private String name;
     private String author;
