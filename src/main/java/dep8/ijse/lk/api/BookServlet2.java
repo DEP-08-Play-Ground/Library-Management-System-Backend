@@ -132,6 +132,34 @@ public class BookServlet2 extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (req.getPathInfo()==null || req.getPathInfo().equals("/")){
+            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,"Unable to delete all the books");
+            return;
+        }else if (req.getPathInfo() !=null && !req.getPathInfo().substring(1).matches("B[0-9]{3}")){
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND,"Book Not Found!");
+            return;
+        }
+
+        String id = req.getPathInfo().replaceAll("[/]", "");
+        try(Connection connection = pool.getConnection()){
+            PreparedStatement stm1 = connection.prepareStatement("SELECT * FROM books WHERE id=?");
+            stm1.setString(1,id);
+            ResultSet rst = stm1.executeQuery();
+            if (rst.next()){
+                PreparedStatement stm = connection.prepareStatement("DELETE FROM books WHERE id=?");
+                stm.setString(1,id);
+                if (stm.executeUpdate()!=1){
+                    throw new RuntimeException("Failed to Delete the book!");
+                }
+                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }else {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND,"Book Not Found!");
+            }
+
+        }catch (Throwable e){
+            e.printStackTrace();
+            resp.getWriter().write("Failed to Delete the book!");
+        }
 
     }
 }
