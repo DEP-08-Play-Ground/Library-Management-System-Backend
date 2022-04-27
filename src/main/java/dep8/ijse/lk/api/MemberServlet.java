@@ -196,6 +196,12 @@ public class MemberServlet extends HttpServlet {
             stm1.setString(1,id);
             ResultSet rst = stm1.executeQuery();
             if (rst.next()){
+                PreparedStatement pst = connection.prepareStatement("SELECT * FROM members INNER JOIN issues i on members.id = i.memberId WHERE i.memberId=?");
+                ResultSet rest = pst.executeQuery();
+                if(rest.next()){
+                    resp.sendError(HttpServletResponse.SC_GONE,"A book has been issued for the member");
+                    return;
+                }
                 PreparedStatement stm = connection.prepareStatement("DELETE FROM members WHERE id=?");
                 stm.setString(1,id);
                 if (stm.executeUpdate()!=1){
