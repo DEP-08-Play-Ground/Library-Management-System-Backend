@@ -1,7 +1,10 @@
 package dep8.ijse.lk.api;
 
 import dep8.ijse.lk.dto.BookDT02;
+import dep8.ijse.lk.dto.BookDTO;
 import dep8.ijse.lk.exception.ValidationException;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 
 import javax.annotation.Resource;
 import javax.servlet.*;
@@ -14,6 +17,8 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 
 @MultipartConfig(location = "/tmp", maxFileSize = 15*1024*1024)
 @WebServlet(name = "BookServlet2", urlPatterns ="/v2/books/*")
@@ -161,5 +166,53 @@ public class BookServlet2 extends HttpServlet {
             resp.getWriter().write("Failed to Delete the book!");
         }
 
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (req.getPathInfo()!=null && !req.getPathInfo().equals("/")){
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        String query = req.getParameter("q");
+        query = "%"  + ((query == null) ? "": query) + "%";
+        boolean pagination = req.getParameter("page")!=null && req.getParameter("size")!=null;
+
+        String sql;
+        if (pagination){
+            sql="SELECT * FROM books WHERE id LIKE ? OR name LIKE ? OR author LIKE ? OR booktype LIKE ? LIMIT ? OFFSET ?";
+        }else {
+            sql="SELECT * FROM books WHERE id LIKE ? OR name LIKE ? OR author LIKE ? OR booktype LIKE ?";
+        }
+
+        try (Connection connection = pool.getConnection()) {
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setString(1,query);
+            stm.setString(2,query);
+            stm.setString(3,query);
+            stm.setString(4,query);
+            if (pagination){
+                int page=Integer.parseInt(req.getParameter("page"));
+                int size=Integer.parseInt(req.getParameter("size"));
+                stm.setInt(5,size);
+                stm.setInt(6,(page -1)*size);
+            }
+            ResultSet rst = stm.executeQuery();
+            Jsonb jsonb = JsonbBuilder.create();
+            ArrayList<BookDT02> bookDTOS = new ArrayList<>();
+            while (rst.next()) {
+                bookDTOS.add(new BookDT02(rst.getString("id"), rst.getString("name")
+                        , rst.getString("author"), rst.getString("booktype"),rst.getBytes("preview")));
+            }
+
+            resp.setContentType("application/json");
+            jsonb.toJson(bookDTOS, resp.getWriter());
+            bookDTOS.clear();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("Failed to fetch data");
+        }
     }
 }
