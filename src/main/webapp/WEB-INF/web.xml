@@ -16,4 +16,5 @@
         <param-name>origin</param-name>
         <param-value>http://localhost:1234</param-value>
     </context-param>
+
 </web-app>

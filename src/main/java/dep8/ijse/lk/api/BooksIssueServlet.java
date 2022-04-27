@@ -25,9 +25,42 @@ public class BooksIssueServlet extends HttpServlet {
     public volatile DataSource pool;
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if(request.getPathInfo()!=null && !request.getPathInfo().equals("/")){
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        String query = request.getParameter("q");
+        query = "%"  + ((query == null) ? "": query) + "%";
+
+        boolean paginations = request.getParameter("page")!=null && request.getParameter("size")!=null;
+        String sql=null;
+        if (paginations){
+            sql="SELECT * FROM Issues WHERE bookId LIKE ? OR memberId LIKE ? LIMIT ? OFFSET ?";
+        }else {
+            sql="SELECT * FROM Issues WHERE bookId LIKE ? OR memberId LIKE ?";
+        }
+
         try (Connection connection = pool.getConnection()) {
-            PreparedStatement stm = connection.prepareStatement("SELECT * FROM Issues");
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setString(1,query);
+            stm.setString(2,query);
+            if (paginations){
+                int page = Integer.parseInt(request.getParameter("page"));
+                int size = Integer.parseInt(request.getParameter("size"));
+                stm.setInt(3,page);
+                stm.setInt(4,(page-1)*size);
+            }
             ResultSet rst = stm.executeQuery();
+            PreparedStatement pst = connection.prepareStatement("SELECT count(*) FROM Issues WHERE bookId LIKE ? OR memberId LIKE ?");
+            pst.setString(1,query);
+            pst.setString(2,query);
+            ResultSet rest = pst.executeQuery();
+            if (rest.next()){
+                response.setHeader("X-Count",rest.getString(1));
+            }else {
+                response.setHeader("X-Count","0");
+            }
+
             Jsonb jsonb = JsonbBuilder.create();
             ArrayList<IssueBookDTO> issues = new ArrayList<>();
             while (rst.next()) {

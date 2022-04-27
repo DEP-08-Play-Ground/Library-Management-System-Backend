@@ -170,7 +170,7 @@ public class BookServlet2 extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (req.getPathInfo()!=null && !req.getPathInfo().equals("/")){
+        if (req.getPathInfo()!=null && !(req.getPathInfo().equals("/id") || req.getPathInfo().equals("/"))){
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -178,12 +178,30 @@ public class BookServlet2 extends HttpServlet {
         String query = req.getParameter("q");
         query = "%"  + ((query == null) ? "": query) + "%";
         boolean pagination = req.getParameter("page")!=null && req.getParameter("size")!=null;
-
         String sql;
         if (pagination){
             sql="SELECT * FROM books WHERE id LIKE ? OR name LIKE ? OR author LIKE ? OR booktype LIKE ? LIMIT ? OFFSET ?";
         }else {
             sql="SELECT * FROM books WHERE id LIKE ? OR name LIKE ? OR author LIKE ? OR booktype LIKE ?";
+        }
+
+        String s = req.getPathInfo().replaceAll("/", "");
+        if (!s.equals("")){
+            try(Connection con = pool.getConnection()){
+                PreparedStatement stm = con.prepareStatement("SELECT * FROM books WHERE id=?");
+                stm.setString(1,s);
+                ResultSet rst = stm.executeQuery();
+                if (rst.next()){
+                    resp.getWriter().write("Book is not available!");
+                    return;
+                }else {
+                    resp.getWriter().write("Book is available!");
+                    return;
+                }
+            }catch (SQLException e){
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                return;
+            }
         }
 
         try (Connection connection = pool.getConnection()) {
