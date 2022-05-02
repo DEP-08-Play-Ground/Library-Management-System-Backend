@@ -18,6 +18,7 @@ public class CorsFilter extends HttpFilter {
                 res.setHeader("Access-Control-Allow-Methods","GET, POST, PUT, DELETE, OPTION, HEADER");
                 res.setHeader("Access-Control-Allow-Headers","Content-Type");
                 res.setHeader("Access-Control-Expose-Headers","Content-Type");
+                res.setHeader("Access-Control-Expose-Headers","X-Count");
             }
         }
         chain.doFilter(req,res);

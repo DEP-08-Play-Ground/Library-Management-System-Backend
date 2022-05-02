@@ -1,7 +1,6 @@
 package dep8.ijse.lk.api;
 
 import dep8.ijse.lk.dto.BookDT02;
-import dep8.ijse.lk.dto.BookDTO;
 import dep8.ijse.lk.exception.ValidationException;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
@@ -75,7 +74,11 @@ public class BookServlet2 extends HttpServlet {
                 book = new BookDT02(id, name, author, booktype);
             }
 
-            if (method.equals("POST") && !book.getId().matches("B[0-9]{3}")) {
+            if (method.equals("PUT")){
+                book.setId(pathInfo.replaceAll("[/]",""));
+            }
+
+            if (!book.getId().matches("B[0-9]{3}")) {
                 throw new ValidationException("Invalid ID");
             } else if (book.getName()==null) {
                 throw new ValidationException("Should add the book name");
@@ -83,10 +86,6 @@ public class BookServlet2 extends HttpServlet {
                 throw new ValidationException("Should add the author");
             } else if (book.getType()==null) {
                 throw new ValidationException("Should add the book type");
-            }
-
-            if (method.equals("PUT")){
-                book.setId(pathInfo.replaceAll("[/]",""));
             }
 
             try (Connection con = pool.getConnection()) {
@@ -185,7 +184,10 @@ public class BookServlet2 extends HttpServlet {
             sql="SELECT * FROM books WHERE id LIKE ? OR name LIKE ? OR author LIKE ? OR booktype LIKE ?";
         }
 
-        String s = req.getPathInfo().replaceAll("/", "");
+        String s="";
+        if (req.getPathInfo()!=null){
+            s = req.getPathInfo().replaceAll("/", "");
+        }
         if (!s.equals("")){
             try(Connection con = pool.getConnection()){
                 PreparedStatement stm = con.prepareStatement("SELECT * FROM books WHERE id=?");

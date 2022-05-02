@@ -2,13 +2,8 @@ package dep8.ijse.lk.api;
 
 import dep8.ijse.lk.dto.MemberDTO;
 import dep8.ijse.lk.exception.ValidationException;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonReader;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
-import jakarta.json.bind.JsonbException;
-
 import javax.annotation.Resource;
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -196,7 +191,8 @@ public class MemberServlet extends HttpServlet {
             stm1.setString(1,id);
             ResultSet rst = stm1.executeQuery();
             if (rst.next()){
-                PreparedStatement pst = connection.prepareStatement("SELECT * FROM members INNER JOIN issues i on members.id = i.memberId WHERE i.memberId=?");
+                PreparedStatement pst = connection.prepareStatement("SELECT * FROM members INNER JOIN Issues i on members.id = i.memberId WHERE i.memberId=?");
+                pst.setString(1,id);
                 ResultSet rest = pst.executeQuery();
                 if(rest.next()){
                     resp.sendError(HttpServletResponse.SC_GONE,"A book has been issued for the member");
